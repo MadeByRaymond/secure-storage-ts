@@ -10,13 +10,6 @@ export interface StorageConfig {
      */
     encryptionKey: string;
     /**
-     * The secret salt used to derive a strong key from your encryptionKey using `PBKDF2`.
-     * If left blank, defaults to a default public salt.
-     *
-     * Note: For production, consider using a static salt or storing one per-user _based on your use-case_
-     */
-    salt?: string;
-    /**
      * If true, bypasses encryption entirely when `isDev` is true.
      * @default false
      */
@@ -59,21 +52,18 @@ interface StoreOptions {
 }
 
 export class SecureStorage {
-    private readonly DEFAULT_SALT = 'mNK93AiXkec8DNVV4t1p5zq2Rut0qbk1-aZwjlZZHCHLWNxDrymdiynxaqFiS9qfU_2a2QJlqHjPhcvIQldxOL85ptZM5snfN';
     private readonly prefix: string;
     private readonly alwaysUseSessionStorageSet: string[];
     private readonly encryptionKey: string;
     private readonly disableInDev: boolean;
     private readonly isDev: boolean;
     private readonly isBrowser: boolean;
-    private readonly salt: string;
     private cachedKey: any;
 
     constructor(config: StorageConfig = {encryptionKey: ''}) {
         // Assign config values or safe defaults
         this.prefix = config?.prefix || '__';
         this.encryptionKey = config?.encryptionKey || '';
-        this.salt = config?.salt || this.DEFAULT_SALT;
         this.isBrowser = config.isBrowser ?? typeof window !== 'undefined';
 
         this.isDev = config.isDev ?? (this.isBrowser ? (() => {
@@ -97,32 +87,32 @@ export class SecureStorage {
      * Generates a 256-bit key using PBKDF2.
      * This is much more secure than using the raw string directly.
      */
-    private getDerivedKey() {
-        if (this.cachedKey) return this.cachedKey;
-
-        this.cachedKey = CryptoJS.PBKDF2(this.encryptionKey, this.salt, {
+    private getDerivedKey(salt:any) {
+        return CryptoJS.PBKDF2(this.encryptionKey, salt, {
             keySize: 256 / 32,
             iterations: 1000 // Balance between security and performance
         });
-        return this.cachedKey;
     }
 
     // Encrypt data
     private encrypt(data: string): string {
         if ((this.isDev && this.disableInDev) || !this.encryptionKey) return data;
 
-        // 1. Generate a fresh random Initialization Vector (IV)
+        // 1. Generate a fresh random Salt (16 bytes / 4 words)
+        const salt = CryptoJS.WordArray.random(128 / 8);
+
+        // 2. Generate a fresh random Initialization Vector (IV)
         const iv = CryptoJS.WordArray.random(128 / 8);
 
-        // 2. Encrypt using the derived key and the random IV
-        const encrypted = CryptoJS.AES.encrypt(data, this.getDerivedKey(), {
+        // 3. Encrypt using the derived key and the random IV
+        const encrypted = CryptoJS.AES.encrypt(data, this.getDerivedKey(salt), {
             iv: iv,
             mode: CryptoJS.CBC,
             padding: CryptoJS.Pkcs7
         });
 
-        // Combine IV + Ciphertext WordArrays and encode the whole block as Base64
-        const combined = iv.concat(encrypted.ciphertext!);
+        // 4. Combine Salt + IV + Ciphertext WordArrays and encode the whole block as Base64
+        const combined = salt.concat(iv).concat(encrypted.ciphertext!);
         return combined.toString(CryptoJS.Base64);
     }
 
@@ -132,18 +122,21 @@ export class SecureStorage {
         if (!data) return null;
 
         try {
-            // 1. Extract the IV and the ciphertext
+            // 1. Extract the Salt, IV and the ciphertext
             // 1a. Decode the combined Base64 string into a WordArray
             const combined = CryptoJS.Base64.parse(data);
 
-            // 1b. Extract the first 16 bytes (4 words) as the IV
-            const iv = CryptoJS.WordArray.create(combined.words.slice(0, 4));
+            // 1b. Extract the Salt (first 16 bytes / 4 words)
+            const salt = CryptoJS.WordArray.create(combined.words.slice(0, 4));
 
-            // 1c. Extract everything else as the ciphertext
-            const ciphertext = CryptoJS.WordArray.create(combined.words.slice(4));
+            // 1c. Extract the IV (next 16 bytes / 4 words)
+            const iv = CryptoJS.WordArray.create(combined.words.slice(4, 8));
+
+            // 1d. Extract everything else as the ciphertext
+            const ciphertext = CryptoJS.WordArray.create(combined.words.slice(8));
 
             // 2. Decrypt using the same derived key and the extracted IV
-            const bytes = CryptoJS.AES.decrypt({ ciphertext: ciphertext } as any, this.getDerivedKey(), {
+            const bytes = CryptoJS.AES.decrypt({ ciphertext: ciphertext } as any, this.getDerivedKey(salt), {
                 iv: iv,
                 mode: CryptoJS.CBC,
                 padding: CryptoJS.Pkcs7
@@ -152,7 +145,7 @@ export class SecureStorage {
             const decrypted = bytes.toString(CryptoJS.Utf8);
             return decrypted || null;
         } catch (error) {
-            console.error('Decryption failed:', error);
+            console.error('SecureStorage: Decryption failed:', error);
             return null;
         }
     }

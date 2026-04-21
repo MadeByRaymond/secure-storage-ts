@@ -15,7 +15,7 @@ Note that this package is framework-agnostic and works with Vanilla JS, React, V
 
 ## 🚀 Features
 
-- ✅ **AES Encryption:** Secures data under the hood using `crypto-es`.
+- ✅ **AES Encryption:** Secures data under the hood using `crypto-es`. Alongside `PBKDF2` key derivation, with dynamically generated, unique, *per-item salts and IVs*, for enterprise-grade security.
 - ✅ **TTL (Time-To-Live):** Set expiry times on your storage items. They automatically clear out when expired!
 - ✅ **SSR-Compatible:** Safely verifies the browser environment (`typeof window`) before accessing storage.
 - ✅ **Smart Dev Mode:** Auto-detects `localhost` to optionally bypass encryption for easier debugging.
@@ -59,7 +59,6 @@ import { SecureStorage, StorageConfig } from 'secure-storage-ts';
 
 const config: StorageConfig = {
     encryptionKey: 'your-super-secret-key', // Your secret AES key
-    salt: 'your-custom-salt', // Custom salt for PBKDF2 (optional but recommended)
     prefix: 'MY_APP_',
     disableInDev: true, // Bypasses encryption on localhost or when isDev is true
     alwaysUseSessionStorageSet: ['PAYMENT_INFO', 'TEMP_TOKEN'],
@@ -72,15 +71,14 @@ export const storage = new SecureStorage(config);
 ### Additional Configurations:
 Configuration settings can be provided to customize how data is encrypted and stored:
 
-| Property                     | Description                                                                                                                                   | Required? | Default                 |
-|------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|-----------|-------------------------|
-| `encryptionKey`              | The secret key used for AES encryption. If left empty, encryption is bypassed.                                                                | Yes       | `''`                    |
-| `salt`                       | The secret salt used to derive a strong key from your encryptionKey using `PBKDF2`. For production, consider using a static or per-user salt. | optional  | _Internal default salt_ |
-| `disableInDev`               | If true, bypasses encryption entirely when running in a development environment or when `isDev` is `true`.                                    | optional  | `false`                 |
-| `isDev`                      | Flags the environment as dev. If omitted, the service auto-detects based on localhost or loopback IPs.                                        | optional  | _Auto-detected_         |
-| `isBrowser`                  | Explicitly set if the app is in a browser. If omitted, it defaults to checking `typeof window !== 'undefined'`.                               | optional  | _Auto-detected_         |
-| `prefix`                     | A prefix appended to all storage keys to prevent collisions.                                                                                  | optional  | `__`                    |
-| `alwaysUseSessionStorageSet` | An array of exact keys that should always be forced into `sessionStorage` instead of `localStorage`.                                          | optional  | `[]`                    |
+| Property                     | Description                                                                                                     | Required? | Default         |
+|------------------------------|-----------------------------------------------------------------------------------------------------------------|-----------|-----------------|
+| `encryptionKey`              | The secret key used for AES encryption. If left empty, encryption is bypassed.                                  | Yes       | `''`            |
+| `disableInDev`               | If true, bypasses encryption entirely when running in a development environment or when `isDev` is `true`.      | optional  | `false`         |
+| `isDev`                      | Flags the environment as dev. If omitted, the service auto-detects based on localhost or loopback IPs.          | optional  | _Auto-detected_ |
+| `isBrowser`                  | Explicitly set if the app is in a browser. If omitted, it defaults to checking `typeof window !== 'undefined'`. | optional  | _Auto-detected_ |
+| `prefix`                     | A prefix appended to all storage keys to prevent collisions.                                                    | optional  | `__`            |
+| `alwaysUseSessionStorageSet` | An array of exact keys that should always be forced into `sessionStorage` instead of `localStorage`.            | optional  | `[]`            |
 
 <i>💡 Tip: Importing `StorageConfig` for your config object ensures type-safety and IntelliSense autocompletion when setting configuration properties.</i>
 
@@ -163,12 +161,12 @@ function cleanup() {
 
 ## ⚙️ Configuration Summary
 
-| Feature        | Customizable                    | Default Behavior                              |
-|----------------|---------------------------------|-----------------------------------------------|
-| Encryption     | ✅ `encryptionKey`               | Encrypts via `crypto-es` AES                  |
-| Dev Mode       | ✅ `disableInDev`, `isDev`       | Auto-detects `localhost` / `127.0.0.1`        |
-| Storage Target | ✅ `alwaysUseSessionStorageSet`  | Defaults to `localStorage` unless overridden  |
-| SSR Safety     | ✅ `isBrowser`                   | Checks `typeof window !== 'undefined'`        |
+| Feature        | Customizable                    | Default Behavior                                                                                                                 |
+|----------------|---------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| Encryption     | ✅ `encryptionKey`               | Encrypts via `crypto-es` AES, `PBKDF2` key derivation, dynamic (unique) salts and Initialization Vectors (IVs) per storage item. |
+| Dev Mode       | ✅ `disableInDev`, `isDev`       | Auto-detects `localhost` / `127.0.0.1`                                                                                           |
+| Storage Target | ✅ `alwaysUseSessionStorageSet`  | Defaults to `localStorage` unless overridden                                                                                     |
+| SSR Safety     | ✅ `isBrowser`                   | Checks `typeof window !== 'undefined'`                                                                                           |
 
 ---
 
