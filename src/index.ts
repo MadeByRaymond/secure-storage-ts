@@ -134,7 +134,7 @@ export class SecureStorage {
             // 1d. Extract everything else as the ciphertext
             const ciphertext = CryptoJS.WordArray.create(combined.words.slice(8));
 
-            // 2. Decrypt using the same derived key and the extracted IV
+            // 2. Decrypt using the same derived key and the extracted IV and salt
             const bytes = CryptoJS.AES.decrypt({ ciphertext: ciphertext } as any, this.getDerivedKey(salt), {
                 iv: iv,
                 mode: CryptoJS.CBC,

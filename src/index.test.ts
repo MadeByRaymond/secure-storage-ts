@@ -40,6 +40,17 @@ describe('SecureStorage', () => {
         expect(rawStoredValue).not.toContain(testData); // Proves it was encrypted
     });
 
+    it('should encrypt data before saving to sessionStorage', () => {
+        const testData = 'Sensitive User Data';
+        storage.store('USER_DATA', testData, { useSessionStorage: true });
+
+        // Check the raw sessionStorage to ensure it is NOT plain text
+        const rawStoredValue = sessionStorage.getItem('TEST_USER_DATA');
+
+        expect(rawStoredValue).toBeTruthy();
+        expect(rawStoredValue).not.toContain(testData); // Proves it was encrypted
+    });
+
     it('should successfully retrieve and decrypt data', () => {
         storage.store('TOKEN', '12345-ABCDE');
 
@@ -92,5 +103,27 @@ describe('SecureStorage', () => {
 
         expect(storage.retrieve('MY_KEY')).toBeNull(); // Service data is gone
         expect(localStorage.getItem('EXTERNAL_KEY')).toBe('Do Not Delete Me'); // External data remains
+    });
+
+    it('should explicitly clear only expired items using clearExpired()', async () => {
+        vi.useFakeTimers();
+
+        // 1. Store mixed data types
+        storage.store('EXPIRES_FAST', 'I will disappear', { ttl: 50 }); // Expires in 50ms
+        storage.store('EXPIRES_SLOW', 'I will stay', { ttl: 10000 });   // Expires in 10s
+        storage.store('NO_EXPIRY', 'I live forever');                   // Never expires
+
+        // 2. Fast-forward time by 100ms instantly
+        vi.advanceTimersByTime(100);
+
+        // 3. Run the garbage collection
+        await storage.clearExpired();
+
+        // 4. Assert EXPIRES_FAST is completely gone from the raw browser storage
+        expect(localStorage.getItem('TEST_EXPIRES_FAST')).toBeNull();
+
+        // 5. Assert the other items are still perfectly intact
+        expect(storage.retrieve('EXPIRES_SLOW')).toBe('I will stay');
+        expect(storage.retrieve('NO_EXPIRY')).toBe('I live forever');
     });
 });

@@ -74,7 +74,7 @@ Configuration settings can be provided to customize how data is encrypted and st
 | Property                     | Description                                                                                                     | Required? | Default         |
 |------------------------------|-----------------------------------------------------------------------------------------------------------------|-----------|-----------------|
 | `encryptionKey`              | The secret key used for AES encryption. If left empty, encryption is bypassed.                                  | Yes       | `''`            |
-| `disableInDev`               | If true, bypasses encryption entirely when running in a development environment or when `isDev` is `true`.      | optional  | `false`         |
+| `disableInDev`               | If true, bypasses encryption entirely when running in a development environment, or when `isDev` is `true`.     | optional  | `false`         |
 | `isDev`                      | Flags the environment as dev. If omitted, the service auto-detects based on localhost or loopback IPs.          | optional  | _Auto-detected_ |
 | `isBrowser`                  | Explicitly set if the app is in a browser. If omitted, it defaults to checking `typeof window !== 'undefined'`. | optional  | _Auto-detected_ |
 | `prefix`                     | A prefix appended to all storage keys to prevent collisions.                                                    | optional  | `__`            |
