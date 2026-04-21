@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    // 1. Environment Settings
+    "target": "es2018",
+    "lib": ["es2018", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "ignoreDeprecations": "6.0",
+
+    // 2. File Layout
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    // 3. Stricter Typechecking Options
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+
+    // 4. Interoperability & Bundler optimizations
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"]
+}
