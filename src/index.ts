@@ -58,7 +58,6 @@ export class SecureStorage {
     private readonly disableInDev: boolean;
     private readonly isDev: boolean;
     private readonly isBrowser: boolean;
-    private cachedKey: any;
 
     constructor(config: StorageConfig = {encryptionKey: ''}) {
         // Assign config values or safe defaults
