@@ -1,5 +1,7 @@
 import * as CryptoJS from 'crypto-es';
 
+export * from './time-utils';
+
 /**
  * Configuration Interface for `SecureStorage`
  */

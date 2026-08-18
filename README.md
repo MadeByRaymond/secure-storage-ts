@@ -22,6 +22,7 @@ Note that this package is framework-agnostic and works with Vanilla JS, React, V
 - ✅ **Storage Routing:** Easily route specific keys permanently to `sessionStorage`.
 - ✅ **Prefixing:** Auto-appends prefixes to keys to prevent collisions with other apps.
 - ✅ **Automatic Parsing:** Built-in JSON stringify and parse support for complex objects.
+- ✅ **Time Utility Class:** Built-in `TimeHelpers` class to convert time units to milliseconds (for TTL implementations and similar use cases).
 
 ---
 
@@ -89,10 +90,12 @@ Configuration settings can be provided to customize how data is encrypted and st
 Simply import your configured instance into any file to easily store and retrieve data.
 ```ts
 import { storage } from './storage';
+import { TimeHelpers } from 'secure-storage-ts';
 
 function storeData(key: string, data: any) {
     // Store data with a 1-hour TTL
-    storage.store(key, data, false, 3600000);
+    // Note: TimeHelpers.minuteToMs(60) = 60mins (or 1hr) = 3600000ms
+    storage.store(key, data, false, TimeHelpers.minuteToMs(60));
 }
 
 function getData(key: string) {
@@ -113,15 +116,16 @@ function clearDataStore() {
 ### Full Usage Example:
 ```ts
 import { storage } from './storage';
+import { TimeHelpers } from 'secure-storage-ts';
 
 function initializeUserProfile() {
     // 1. Store a simple string
     storage.store('USER_THEME', 'dark');
 
-    // 2. Store a complex object WITH a Time-To-Live (expires in 1 hour)
+    // 2. Store a complex object WITH a Time-To-Live (expires in 12 hours)
     const userData = { name: 'Daniel', role: 'Admin' };
     storage.store('USER_DATA', userData, {
-        ttl: 3600000, // Time-to-live in milliseconds
+        ttl: TimeHelpers.hoursToMs(12) // or 43200000 – Time-to-live in milliseconds
     });
 
     // 3. Retrieve and automatically parse the JSON object
