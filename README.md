@@ -5,7 +5,7 @@
 ![npm](https://img.shields.io/npm/v/secure-storage-ts)
 ![Typescript](https://img.shields.io/badge/typescript-compatible-brightgreen)
 ![NPM Downloads](https://img.shields.io/npm/d18m/secure-storage-ts)
-![License](https://img.shields.io/npm/l/secure-storage-ts)
+[![license](https://img.shields.io/npm/l/secure-storage-ts)](./LICENSE)
 
 **The best way to quickly integrate secure, encrypted client-side storage in any web project.**
 
